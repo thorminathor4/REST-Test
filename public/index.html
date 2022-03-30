@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Users</title>
+    </head>
+    <body>
+        <table>
+            <thead>
+                <th>First Name</th>
+                <th>Middle Name</th>
+                <th>Last Name</th>
+                <th></th>
+            </thead>
+            <tbody id="tbody">
+            </tbody>
+        </table>
+        <script>
+            const tbody = document.getElementById('tbody');
+            let newFirstName, newMiddleName, newLastName;
+            const newUserHtml = `<tr>
+                <td><input id="newFirstName"/></td>
+                <td><input id="newMiddleName"/></td>
+                <td><input id="newLastName"/></td>
+                <td><button onclick="createUser()">Create</button></td>
+            </tr>`;
+
+            fetchAll();
+
+            function fetchAll(){
+                fetch('/users')
+                .then(response => response.json())
+                .then(users => loadAll(users));
+            }
+
+            function loadAll(users){
+                const html = users.map(userToHTML).join('') + newUserHtml;
+                tbody.innerHTML = html;
+                newFirstName = document.getElementById('newFirstName');
+                newMiddleName = document.getElementById('newMiddleName');
+                newLastName = document.getElementById('newLastName');
+            }
+
+            function userToHTML(user){
+                return `<tr id="user${user.id}">
+                    <td>${user.firstname||""}</td>
+                    <td>${user.middlename||""}</td>
+                    <td>${user.lastname||""}</td>
+                    <td><button onclick="deleteUser(${user.id})">Delete</button></td>
+                </tr>`;
+            }
+            
+            function createUser(){
+                console.log(newFirstName.value, newMiddleName.value, newLastName.value);
+                const user = {firstname: newFirstName?.value||"", middlename: newMiddleName?.value||"", lastname: newLastName?.value||""};
+                fetch('/users', {headers: {'content-type': 'application/json'}, method: "POST", body: JSON.stringify(user)})
+                .then(response => response.json())
+                .then(fetchAll, fetchAll);
+            }
+
+            function deleteUser(id){
+                fetch('/users/' + id, {method: "DELETE"})
+                .then(response => response.json())
+                .then(fetchAll, fetchAll);
+            }
+
+        </script>
+    </body>
+</html>
